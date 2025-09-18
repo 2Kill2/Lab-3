@@ -2,6 +2,19 @@
 {
     internal class GameManager
     {
+        /*
+            greet player
+            ask to play
+            (if yes continue, if no exit)
+            explain rules
+            display list of dice
+            decide on 2 dice to have
+            first round of rolling
+            (player rolls first, computer rolls second)
+            check for matching numbers
+            roll until dice match numbers
+            higher number of rolls it took to get a match loses
+         */
 
         //entry point of the application or else I enoucnter an error
         static void Main(string[] args)
