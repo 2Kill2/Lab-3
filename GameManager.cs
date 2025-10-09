@@ -2,10 +2,25 @@
 {
     internal class GameManager
     {
+        public List<int> Inventory { get; set; } = new List<int>();
+        public void ShowInventory()
+        {
+            if (Inventory.Count == 0)
+            {
+                Console.WriteLine("Your pockets are empty.");
+            }
+            else
+            {
+                Console.WriteLine("You have the following items in your inventory:");
+                foreach (int d in Inventory)
+                    Console.WriteLine(d);
+            }
+        }
+
         static void Main(string[] args)
         {
             GameManager gameManager = new GameManager();
-            gameManager.PlayGame();
+            gameManager.ExploreRooms();
         }
 
         // Game starting point
@@ -14,218 +29,142 @@
             List<int> computerRolls = new List<int>();
             List<int> playerRolls = new List<int>();
 
-            //keep playing ask
-            bool keepPlaying = true;
+            int PlayerTurns = 0;
+            int ComputerTurns = 0;
+            bool Winner = false;
+
+            //I had to rewrite this whole thing because it was terrible mess the first time
+
+            Console.WriteLine("DICE BATTLE!");
+
+            Console.WriteLine("Choose two dice to roll with.");
+            ShowInventory();
+
+           
+            // With this corrected line:
+            int playerDieOne = GetDieChoice("first");
+            int playerDieTwo = GetDieChoice("second");
+
+            DieRoller dieRoller = new DieRoller();
+
+            while (!Winner)
             {
-                int playerTurns = 0;
-                int computerTurns = 0;
-                bool Winner = false;
+                Console.WriteLine("Rolling dice...");
+                int rollOne = dieRoller.RollDie(playerDieOne);
+                int rollTwo = dieRoller.RollDie(playerDieTwo);
 
-                //welcome message
-                Console.WriteLine("Welcome to Die vs, Die!");
-                Console.WriteLine("Alex Lee - 09/16");
+                playerRolls.Add(rollOne);
+                playerRolls.Add(rollTwo);
 
-                //get player name
-                Console.WriteLine("What is your name?");
-                string playerName = Console.ReadLine();
-                Console.WriteLine("Hello " + playerName + ", would you like to play? Y/N");
-                string playResponse = Console.ReadLine().ToUpper();
+                Console.WriteLine($"You rolled a {rollOne} and a {rollTwo}.");
 
-
-                if (playResponse == "Y")
+                if (rollOne == rollTwo)
                 {
-                    Console.WriteLine("Great! Let's begin!");
-
+                    Console.WriteLine("You got a match!");
+                    Winner = TurnChecker(PlayerTurns, ComputerTurns);
                 }
-                else if (playResponse == "N")
+                else
                 {
-                    Console.WriteLine("No? Goodbye!");
-                    Environment.Exit(0);
+                    PlayerTurns++;
+                    Console.WriteLine("No match, computer's turn.");
                 }
-                while (playResponse != "Y" && playResponse != "N")
+            }
+
+            //computer turn logic here...
+            Random rng = new Random();
+            List<int> choices = new List<int> { 4, 6, 8, 20 };
+            int compDieOne = choices[rng.Next(choices.Count)];
+            int compDieTwo = choices[rng.Next(choices.Count)];
+
+            int cpuRollOne = dieRoller.RollDie(compDieOne);
+            int cpuRollTwo = dieRoller.RollDie(compDieTwo);
+
+            computerRolls.Add(cpuRollOne);
+            computerRolls.Add(cpuRollTwo);
+
+            Console.WriteLine($"Computer rolled a {cpuRollOne} and a {cpuRollTwo}.");
+
+            if (cpuRollOne == cpuRollTwo)
+            {
+                Console.WriteLine("Computer got a match!");
+                Winner = TurnChecker(PlayerTurns, ComputerTurns);
+            }
+            else
+            {
+                ComputerTurns++;
+                Console.WriteLine("No match, your turn.");
+            }
+
+            Console.WriteLine("DICE BATTLE OVER!");
+        }
+
+        public int GetDieChoice(string order)
+        {
+            while (true)
+            {
+                Console.WriteLine($"Choose your {order} die from your inventory (e.g., 4, 6, 8, 20):");
+                string input = Console.ReadLine();
+                if (int.TryParse(input, out int dieSides) && Inventory.Contains(dieSides))
                 {
-                    Console.WriteLine("Invalid input, please enter Y or N.");
-                    playResponse = Console.ReadLine().ToUpper();
+                    return dieSides;
                 }
-
-                //explain rules
-                Console.WriteLine("okay" + playerName + ", Here are the rules:");
-                Console.WriteLine("there are 4 dice to choose from: d4, d6, d8, and d20");
-                Console.WriteLine("You will choose two to roll, we will both roll them until we get a matching number," +
-                    " who ever has the least amount of rolls to get a match wins!");
-                Console.WriteLine("You go first!");
-                Console.WriteLine("Here are the dice you can choose from:");
-
-
-
-                //try parse playerchoice to int
-
-
-
-                //GAME LOOP STARTS HERE!!!!
-                while (!Winner)
+                else
                 {
+                    Console.WriteLine("Invalid choice. Please select a die you have in your inventory.");
+                }
+            }
+        }
 
+        public void ExploreRooms()
+        {
+            //begginer dice
+            Inventory.Add(20);
+            Inventory.Add(16);
 
-                    Console.WriteLine("please input your FIRST then SECOND roll, 4, 6, 8, 20.");
+            //create rooms
+            var center = new Center();
+            var treasureRoom = new TreasureRoom();
+            var encounterRoom = new EncounterRoom();
 
-                    //create variables to store rolls
-                    int rollOne = 0;
-                    int rollTwo = 0;
+            //connect rooms
+            center.AddExit("north", treasureRoom);
+            treasureRoom.AddExit("south", center);
+            center.AddExit("east", encounterRoom);
+            encounterRoom.AddExit("west", center);
 
-                    //get player dice choice
-                    string playerDiceChoiceOne = Console.ReadLine().ToLower();
+            Room currentRoom = center;
 
-                    //get [player second dice choice
-                    string playerDiceChoiceTwo = Console.ReadLine().ToLower();
+            Console.WriteLine("You are stuck in your house, go do something to elivate your boredom.");
+            currentRoom.EnterRoom();
 
-                    Console.WriteLine("You chose " + playerDiceChoiceOne + " and " + playerDiceChoiceTwo + ".");
+            bool exploring = true;
+            while (exploring)
+            {
+                Console.WriteLine("What next?");
+                string cmd = Console.ReadLine().ToLower();
 
-                    DieRoller dieRoller = new DieRoller();
-
-                    bool parseOne = int.TryParse(playerDiceChoiceOne, out int playerDieOne);
-
-
-
-
-
-
-                    //roll the dice selected
-                    while (true)
-                    {
-                        if (int.TryParse(playerDiceChoiceOne, out playerDieOne) && (playerDieOne == 4 ||
-                            playerDieOne == 6 || playerDieOne == 8 || playerDieOne == 20))
-                        {
-                            //roll the dice
-                            rollOne = dieRoller.RollDie(playerDieOne);
-                            break;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid input, please enter your FIRST die, 4, 6, 8, 20.");
-                            playerDiceChoiceOne = Console.ReadLine().ToLower();
-                        }
-                    }
-
-
-
-                    bool parseTwo = int.TryParse(playerDiceChoiceTwo, out int playerDieTwo);
-
-                    //roll the second die selected
-                    while (true)
-                    {
-                        if (int.TryParse(playerDiceChoiceTwo, out playerDieTwo) && (playerDieTwo == 4 ||
-                            playerDieTwo == 6 || playerDieTwo == 8 || playerDieTwo == 20))
-                        {
-                            // roll the second dice
-                            rollTwo = dieRoller.RollDie(playerDieOne);
-                            break;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid input, please enter your SECOND die, 4, 6, 8, 20.");
-                            playerDiceChoiceTwo = Console.ReadLine().ToLower();
-                        }
-                    }
-
-                    Console.WriteLine("You rolled a " + rollOne + " and a " + rollTwo + ".");
-
-                    //track dice for stats
-                    playerRolls.Add(rollOne);
-                    playerRolls.Add(rollTwo);
-
-                    if (rollOne == rollTwo)
-                    {
-                        Console.WriteLine("You got it!");
-                        //run Turn Checker method
-                        Winner = TurnChecker(playerTurns, computerTurns);
-
-                    }
-                    else
-                    {
-                        playerTurns++;
-                        Console.WriteLine("No match, computer's turn.");
-                    }
-
-                    //computer turn
-
-                    //create list (maybe array better?)
-                    List<int> Choices = new List<int>();
-                    Choices.Add(4); Choices.Add(6); Choices.Add(8); Choices.Add(20);
-
-                    //randomly choose from list
-                    Random randomOne = new Random();
-                    int compChoiceOne = Choices[randomOne.Next(Choices.Count)];
-
-                    Console.WriteLine("I think I will choose " + compChoiceOne + ", as my first die.");
-
-                    //randomly choose from list again
-                    Random randomTwo = new Random();
-                    int compChoiceTwo = Choices[randomTwo.Next(Choices.Count)];
-
-                    Console.WriteLine("I think I will choose " + compChoiceTwo + ", as my second die.");
-
-                    Console.WriteLine("I will now roll my dice.");
-
-                    //roll the dice
-                    int cpurollOne = dieRoller.RollDie(compChoiceOne);
-                    int cpurollTwo = dieRoller.RollDie(compChoiceTwo);
-
-                    //track dice for stats
-                    computerRolls.Add(cpurollOne);
-                    computerRolls.Add(cpurollTwo);
-
-
-                    Console.WriteLine("I got a " + cpurollOne + " and a " + cpurollTwo + ".");
-
-                    //check if they match
-                    if (cpurollOne == cpurollTwo)
-                    {
-                        Console.WriteLine("I got it!");
-                        //run Turn Checker method
-                        Winner = TurnChecker(playerTurns, computerTurns);
-
-                    }
-                    else
-                    {
-                        computerTurns++;
-                        Console.WriteLine("No match, your turn.");
-
-                    }
-
-                    //calculate averages
-                    double playerAverage = playerRolls.Average();
-                    double computerAverage = computerRolls.Average();
-
-                    Console.WriteLine("Your average roll was: " + playerAverage);
-                    Console.WriteLine("My average roll was: " + computerAverage);
-
-
-                    while (true)
-                    {
-                        Console.WriteLine("Would you like to keep playing? Y/N");
-                        string againAsk = Console.ReadLine().ToUpper();
-                        if (againAsk == "Y")
-                        {
-                            Console.WriteLine("Great! Let's begin!");
-                        }
-                        else if (againAsk == "N")
-                        {
-                            Console.WriteLine("No? Goodbye!");
-                            keepPlaying = false;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid input, please enter Y or N.");
-                            againAsk = Console.ReadLine().ToUpper();
-                        }
-
-                    }
-
-                    
-
-                    //END OF GAME LOOP!!!
-
+                switch (cmd)
+                {
+                    case "n":
+                    case "e":
+                    case "s":
+                    case "w":
+                        currentRoom = currentRoom.Move(cmd);
+                        currentRoom.EnterRoom();
+                        break;
+                    case "search":
+                        Console.WriteLine(currentRoom.RoomSearch(this));
+                        break;
+                    case "inventory":
+                        ShowInventory();
+                        break;
+                    case "quit":
+                        exploring = false;
+                        Console.WriteLine("You exit the house and go outside.");
+                        break;
+                    default:
+                        Console.WriteLine("Invalid command. Use N, E, S, W to move, 'search' to look around, 'inventory' to check your items, or 'quit' to exit.");
+                        break;
                 }
             }
         }
@@ -243,11 +182,11 @@
             else if (computerTurns < playerTurns)
             {
                 Console.WriteLine("I win!");
-                
+
                 Console.WriteLine("Player turns: " + playerTurns);
                 Console.WriteLine("Computer turns: " + computerTurns);
                 return true;
-                
+
             }
             else
             {
@@ -257,5 +196,138 @@
             }
         }
 
+       
+
+        public abstract class Room
+        {
+            //each room connects to other rooms
+            public Dictionary<String, Room> Exits { get; set; } = new();
+
+            public string nameof { get; set; }
+            public bool beenHere { get; set; }
+
+            //methods every room must implement
+            public abstract string RoomDescription();
+            public abstract string RoomEntered(GameManager game);
+            public abstract string RoomSearch(GameManager game);
+            public abstract string RoomExit();
+
+            //exit the room
+            public void AddExit(string direction, Room destination)
+            {
+                Exits[direction.ToLower()] = destination;
+            }
+
+            //movement between rooms
+            public Room Move(string direction)
+            {
+                direction = direction.ToLower();
+                if (Exits.ContainsKey(direction))
+                {
+                    Console.WriteLine((RoomExit()));
+                    return Exits[direction];
+                }
+                else
+                {
+                    Console.WriteLine("You can't go that way.");
+                    return this;
+                }
+            }
+
+            public virtual void EnterRoom()
+            {
+                if (!beenHere)
+                {
+                    Console.WriteLine($"You enter the {nameof}, for the first time.");
+                    beenHere = true;
+                }
+                else
+                {
+                    Console.WriteLine($"You return to the {nameof}.");
+                }
+            }
+        }
+
+        public class Center : Room
+        {
+            public Center() { nameof = "a Room"; }
+            public override string RoomDescription() => "You are in a regular room of your house.";
+
+            public override string RoomEntered(GameManager game)
+            {
+                if (!beenHere)
+                {
+                    beenHere = true;
+                    return $"You enter the {nameof}, for the first time.";
+                }
+                else
+                {
+                    return $"You return to the {nameof}.";
+                }
+            }
+
+            public override string RoomSearch(GameManager game)
+            {
+                return "You look around and fun nothing fun.";
+            }
+
+            public override string RoomExit()
+            {
+                return "You leave the center room.";
+            }
+        }
+
+       public class TreasureRoom : Room
+        {
+            private bool treasureTaken = false;
+            public TreasureRoom() { nameof = "Treasure Room"; }
+            public override string RoomDescription() => "You are in the treasure room of the house.";
+            public override void EnterRoom()
+            {
+                if (!beenHere)
+                {
+                    Console.WriteLine($"You enter the {nameof}, for the first time. Why do you have this in your house?");
+                    beenHere = true;
+                }
+                else
+                {
+                    Console.WriteLine($"You return to the {nameof}.");
+                }
+            }
+            public override string RoomSearch(GameManager game)
+            {
+                if (!treasureTaken)
+                {
+                    treasureTaken = true;
+                    Console.WriteLine("You found a d8! added to inventory.");
+                    game.Inventory.Add(8);
+                }
+                else
+                {
+                    Console.WriteLine("You already took the treasure.");
+                }
+            }
+            public override string RoomExit() => "you leave the treasure room.";
+
+
+        }
+
+        public class EncounterRoom : Room
+        {
+            public EncounterRoom() { nameof = "Encounter Room"; }
+            public override string RoomDescription() => "You are in the encounter room of the house, wait what?:";
+            public override void EnterRoom(GameManager game)
+            {
+                Console.WriteLine("An appears!");
+                game.PlayGame();
+                beenHere = true;
+            }
+            public override string RoomSearch(GameManager game)
+            {
+                return "You look around and see the body of a dead dice man.";
+            }
+            public override string RoomExit() => "You leave the encounter room, why do you have a room like this?";
+
+        }
     }
 }
