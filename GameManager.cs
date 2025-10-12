@@ -125,111 +125,165 @@
 
         public void ExploreRooms()
         {
-            GenerateMap();
+            //generate the map
+            map = GenerateMap(3, 3);
 
+            //set sstarting position
+            playerPos = (1, 1); // start in the center
+            Room currentRoom = map[playerPos.row, playerPos.col];
+            currentRoom.beenHere = true;
 
-            //begginer dice
-            Inventory.Add(20);
+            //give beginner dice
             Inventory.Add(16);
+            Inventory.Add(20);
 
-            //create rooms
-            var center = new Center();
-            var treasureRoom = new TreasureRoom();
-            var encounterRoom = new EncounterRoom();
-
-            //connect rooms
-            center.AddExit("north", treasureRoom);
-            treasureRoom.AddExit("south", center);
-            center.AddExit("east", encounterRoom);
-            encounterRoom.AddExit("west", center);
-
-            Room currentRoom = center;
-
-            Console.WriteLine("You are stuck in your house, go do something to elivate your boredom.");
-            currentRoom.EnterRoom();
+            Console.WriteLine("You are bored in your house, find something to eliviate your boredom.");
 
             bool exploring = true;
             while (exploring)
             {
-                Room selectedRoom = map[playerPos.row, playerPos.col];
-                currentRoom.EnterRoom();
+                DrawMap(map, playerPos);
 
-                Console.WriteLine("What next?");
+                currentRoom = map[playerPos.row, playerPos.col];
+                Console.WriteLine(currentRoom.RoomEntered(this));
+
+                Console.WriteLine("What' next?");
                 string cmd = Console.ReadLine().ToLower();
 
                 switch (cmd)
                 {
                     case "n":
+                    case "north":
                         MovePlayer(-1, 0);
                         break;
-                    case "e":
-                        MovePlayer(0, 1);
-                        break;
                     case "s":
+                    case "south":
                         MovePlayer(1, 0);
                         break;
+                    case "e":
+                    case "east":
+                        MovePlayer(0, 1);
+                        break;
                     case "w":
+                    case "west":
                         MovePlayer(0, -1);
                         break;
-                    case "search":
-                        Console.WriteLine(currentRoom.RoomSearch(this));
-                        break;
+                    case "i":
                     case "inventory":
                         ShowInventory();
+                        Console.WriteLine("Press Enter to continue...");
+                        Console.ReadLine();
                         break;
+                    case "sc":
+                    case "search":
+                        Console.WriteLine(currentRoom.RoomSearch(this));
+                        Console.WriteLine("Press Enter to continue...");
+                        Console.ReadLine();
+                        break;
+                    case "q":
                     case "quit":
                         exploring = false;
-                        Console.WriteLine("You exit the house and go outside.");
+                        Console.WriteLine("you exit the house and go outside.");
                         break;
                     default:
-                        Console.WriteLine("Invalid command. Use N, E, S, W to move, 'search' to look around, 'inventory' to check your items, or 'quit' to exit.");
+                        Console.WriteLine("Invalid command. Use n/s/e/w to move, i for inventory, search to search the room, or q to quit.");
+                        Console.WriteLine("Press Enter to continue...");
+                        Console.ReadLine();
                         break;
                 }
             }
         }
 
-        private void GenerateMap()
+        //chat gpt helped me with this function because I was struggling to make it work
+        private Room[,] GenerateMap(int rows, int cols)
         {
-            map = new Room[rows, cols];
+            Room[,] map = new Room[rows, cols];
+            Random rng = new Random();
+            int counter = 1; // for unique room names
 
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 0; c < cols; c++)
                 {
-                    int roll = rng.Next(1, 3);
-
                     Room room;
-                    if (roll == 1)
-                    {
+
+                    int roomType = rng.Next(1, 4); // 1 = Treasure, 2 = Encounter
+                    if (roomType == 1)
                         room = new TreasureRoom();
-                    }
-                    else if (roll == 2)
-                    {
+                    else if (roomType == 2)
                         room = new EncounterRoom();
-                    }
                     else
-                    {
+                        // Default to Center room
                         room = new Center();
 
-                        
-                    }
-                        map[r, c] = room;
+                    // give each room a unique name
+                    room.nameof = $"Room {counter}";
+                    counter++;
+
+                    map[r, c] = room;
                 }
             }
 
+            // Link neighbors
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 0; c < cols; c++)
                 {
                     Room room = map[r, c];
-                    room.North = (r > 0) ? map[r - 1, c] : null;
-                    room.South = (r < rows - 1) ? map[r + 1, c] : null;
-                    room.West = (c > 0) ? map[r, c - 1] : null;
-                    room.East = (c < cols - 1) ? map[r, c + 1] : null;
+                    if (r > 0) room.AddExit("north", map[r - 1, c]);
+                    if (r < rows - 1) room.AddExit("south", map[r + 1, c]);
+                    if (c > 0) room.AddExit("west", map[r, c - 1]);
+                    if (c < cols - 1) room.AddExit("east", map[r, c + 1]);
                 }
             }
 
-            playerPos = (rng.Next(rows), rng.Next(cols));
+            return map;
+        }
+
+        public void DrawMap(Room[,] map, (int row, int col) playerPos)
+        {
+            int rows = map.GetLength(0);
+            int cols = map.GetLength(1);
+
+            Console.WriteLine();
+
+            //renders lines on top of rows
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    Console.Write("+---");
+                }
+                Console.WriteLine("+");
+
+
+                //middle cel with player symbol
+                for (int c = 0; c < cols; c++)
+                {
+                    //check for player and render icon
+                    if (r == playerPos.row && c == playerPos.col)
+                    {
+                        Console.Write("| * ");
+                    }
+                    else if (map[r, c] != null)
+                    {
+                        //mark visited rooms
+                        Console.Write(map[r, c]?.beenHere == true ? "| . " : "|  ");
+                    }
+                    else
+                    {
+                        Console.Write("|  ");
+                    }
+                }
+                Console.WriteLine("|");
+
+                //bottom border
+                for (int c = 0; c < map.GetLength(1); c++)
+                {
+                    Console.Write("+---");
+                }
+                Console.WriteLine("+");
+            }
         }
 
         private void MovePlayer(int dRow, int dCol)
@@ -336,14 +390,15 @@
 
             public override string RoomEntered(GameManager game)
             {
+                string desc = RoomDescription();
                 if (!beenHere)
                 {
                     beenHere = true;
-                    return $"You enter the {nameof}, for the first time.";
+                    return $"You enter the {nameof}, for the first time. \n{desc}";
                 }
                 else
                 {
-                    return $"You return to the {nameof}.";
+                    return $"You return to the {nameof}. \n{desc}";
                 }
             }
 
@@ -365,15 +420,11 @@
             public override string RoomDescription() => "You are in the treasure room of the house.";
             public override string RoomEntered(GameManager game)
             {
-                Console.WriteLine(RoomDescription());
+                string desc = RoomDescription();
                 if (!beenHere)
                 {
-                    Console.WriteLine($"You enter the {nameof}, for the first time. Why do you have this in your house?");
+                    Console.WriteLine($"You enter the {nameof}, for the first time. Why do you have this in your house? \n{desc}");
                     beenHere = true;
-                }
-                else
-                {
-                    Console.WriteLine($"You return to the {nameof}.");
                 }
                 return $"You {(beenHere ? "return to" : "enter")} the {nameof}.";
             }
@@ -391,7 +442,6 @@
                 }
                 else
                 {
-                    Console.WriteLine("You already took the treasure.");
                     return "You already took the treasure.";
                 }
             }
@@ -409,14 +459,9 @@
                 {
                     Console.WriteLine("You enter the encounter room, for the first time.");
                     beenHere = true;
+                    Console.WriteLine("An enemy appears!");
+                    game.PlayGame();
                 }
-                else
-                {
-                    Console.WriteLine("You return to the encounter room.");
-                }
-                Console.WriteLine("An enemy appears!");
-                game.PlayGame();
-                beenHere = true;
                 return $"You {(beenHere ? "return to" : "enter")} the {nameof}.";
             }
             public override string RoomSearch(GameManager game)
