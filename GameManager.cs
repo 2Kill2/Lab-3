@@ -41,15 +41,13 @@
             int ComputerTurns = 0;
             bool Winner = false;
 
-            //I had to rewrite this whole thing because it was terrible mess the first time
+            //I had to rewrite this whole thing because it sucked
 
             Console.WriteLine("DICE BATTLE!");
 
             Console.WriteLine("Choose two dice to roll with.");
             ShowInventory();
 
-           
-            // With this corrected line:
             int playerDieOne = GetDieChoice("first");
             int playerDieTwo = GetDieChoice("second");
 
@@ -57,7 +55,12 @@
 
             while (!Winner)
             {
+                Console.WriteLine("Player's turn!");
                 Console.WriteLine("Rolling dice...");
+                Console.WriteLine("press ENTER to continue...");
+                PlayerTurns++;
+                Console.ReadLine();
+
                 int rollOne = dieRoller.RollDie(playerDieOne);
                 int rollTwo = dieRoller.RollDie(playerDieTwo);
 
@@ -70,40 +73,41 @@
                 {
                     Console.WriteLine("You got a match!");
                     Winner = TurnChecker(PlayerTurns, ComputerTurns);
+                    break;
                 }
-                else
-                {
-                    PlayerTurns++;
-                    Console.WriteLine("No match, computer's turn.");
-                }
-            }
 
-            //computer turn logic here...
-            Random rng = new Random();
-            List<int> choices = new List<int> { 4, 6, 8, 20 };
-            int compDieOne = choices[rng.Next(choices.Count)];
-            int compDieTwo = choices[rng.Next(choices.Count)];
 
-            int cpuRollOne = dieRoller.RollDie(compDieOne);
-            int cpuRollTwo = dieRoller.RollDie(compDieTwo);
-
-            computerRolls.Add(cpuRollOne);
-            computerRolls.Add(cpuRollTwo);
-
-            Console.WriteLine($"Computer rolled a {cpuRollOne} and a {cpuRollTwo}.");
-
-            if (cpuRollOne == cpuRollTwo)
-            {
-                Console.WriteLine("Computer got a match!");
-                Winner = TurnChecker(PlayerTurns, ComputerTurns);
-            }
-            else
-            {
+                Console.WriteLine("Computer's turn!");
+                Console.WriteLine("Rolling dice...");
+                Console.WriteLine("press ENTER to continue...");
                 ComputerTurns++;
-                Console.WriteLine("No match, your turn.");
-            }
+                Console.ReadLine();
 
-            Console.WriteLine("DICE BATTLE OVER!");
+                int[] computerDice = { 4, 6, 8, 20 };
+                int computerDieOne = computerDice[rng.Next(computerDice.Length)];
+                int computerDieTwo = computerDice[rng.Next(computerDice.Length)];
+
+                int compRollOne = dieRoller.RollDie(computerDieOne);
+                int compRollTwo = dieRoller.RollDie(computerDieTwo);
+
+                Console.WriteLine($"Computer rolled a {compRollOne} and a {compRollTwo}.");
+
+                if (compRollOne == compRollTwo)
+                {
+                    Console.WriteLine("Computer got a match!");
+                    Winner = TurnChecker(PlayerTurns, ComputerTurns);
+                    return;
+                }
+
+                Console.WriteLine("No matches this round, rolling again...");
+
+                Console.WriteLine("Press ENTER to continue...");
+                Console.ReadLine();
+            }
+            Console.WriteLine("Game Over!");
+
+            Console.WriteLine("press ENTER to continue...");
+            Console.ReadLine();
         }
 
         public int GetDieChoice(string order)
