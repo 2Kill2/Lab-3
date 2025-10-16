@@ -28,6 +28,15 @@
         static void Main(string[] args)
         {
             GameManager gameManager = new GameManager();
+            Console.WriteLine("Welcome to the Dice Battle Adventure Game!");
+            Console.WriteLine("What is your name?");
+
+            string playerName = Console.ReadLine();
+
+            Console.WriteLine($"Hello, {playerName}! Let's start your adventure.");
+            Console.WriteLine("Press ENTER to continue...");
+            Console.ReadLine();
+
             gameManager.ExploreRooms();
         }
 
