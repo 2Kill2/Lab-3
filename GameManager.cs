@@ -1,5 +1,8 @@
 ﻿namespace LabWork
 {
+    //automate the battle system
+    //end the game on game over
+
     internal class GameManager
     {
         public List<int> Inventory { get; set; } = new List<int>();
@@ -66,9 +69,7 @@
             {
                 Console.WriteLine("Player's turn!");
                 Console.WriteLine("Rolling dice...");
-                Console.WriteLine("press ENTER to continue...");
                 PlayerTurns++;
-                Console.ReadLine();
 
                 int rollOne = dieRoller.RollDie(playerDieOne);
                 int rollTwo = dieRoller.RollDie(playerDieTwo);
@@ -88,9 +89,7 @@
 
                 Console.WriteLine("Computer's turn!");
                 Console.WriteLine("Rolling dice...");
-                Console.WriteLine("press ENTER to continue...");
                 ComputerTurns++;
-                Console.ReadLine();
 
                 int[] computerDice = { 4, 6, 8, 20 };
                 int computerDieOne = computerDice[rng.Next(computerDice.Length)];
@@ -207,7 +206,6 @@
             }
         }
 
-        //chat gpt helped me with this function because I was struggling to make it work
         private Room[,] GenerateMap(int rows, int cols)
         {
             Room[,] map = new Room[rows, cols];
@@ -328,10 +326,16 @@
             }
             else if (computerTurns < playerTurns)
             {
-                Console.WriteLine("I win!");
+                Console.WriteLine("You have been defeated by the dice men!");
 
                 Console.WriteLine("Player turns: " + playerTurns);
                 Console.WriteLine("Computer turns: " + computerTurns);
+                //game over
+                //end game
+                Console.WriteLine("Game Over!");
+                Console.WriteLine("Thank you for playing!");
+                Console.ReadLine();
+                System.Environment.Exit(0);
                 return true;
 
             }
